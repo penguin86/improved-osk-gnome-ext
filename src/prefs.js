@@ -159,5 +159,24 @@ function buildPrefsWidget() {
   );
   prefsWidget.attach(inputShowStatusbarIcon, 1, 5, 1, 1);
 
+  const labelAudibleClick = new Gtk.Label({
+    label: "Audible click on key press",
+    halign: Gtk.Align.START,
+    visible: true,
+  });
+  prefsWidget.attach(labelAudibleClick, 0, 6, 1, 1);
+
+  let inputAudibleClick = new Gtk.Switch({
+    halign: Gtk.Align.START,
+    visible: true,
+  });
+  this.settings.bind(
+    "enable-audible-click",
+    inputAudibleClick,
+    "active",
+    Gio.SettingsBindFlags.DEFAULT
+  );
+  prefsWidget.attach(inputAudibleClick, 1, 6, 1, 1);
+
   return prefsWidget;
 }

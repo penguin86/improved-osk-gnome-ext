@@ -1,5 +1,5 @@
 "use strict";
-const { Gio, GLib, St, Clutter, GObject } = imports.gi;
+const { Gio, GLib, St, Clutter, GObject, GSound } = imports.gi;
 const Main = imports.ui.main;
 const Keyboard = imports.ui.keyboard;
 const Key = Keyboard.Key;
@@ -24,6 +24,7 @@ let currentSeat;
 let _indicator;
 let settings;
 let keyReleaseTimeoutId;
+let gsoundCtx;
 
 function isInUnlockDialogMode() {
   return Main.sessionMode.currentMode === 'unlock-dialog';
@@ -164,6 +165,10 @@ function override_addRowKeys(keys, layout) {
 }
 
 async function override_commitAction(keyval, str) {
+  if (settings.get_boolean("enable-audible-click")) {
+    gsoundCtx.play_simple({ "event.id" : "dialog-information" }, null);
+  }
+
   if (this._modifiers.size === 0 && str !== '' &&
       keyval && this._oskCompletionEnabled) {
     if (await Main.inputMethod.handleVirtualKey(keyval))
@@ -363,6 +368,11 @@ function enable() {
   _oskA11yApplicationsSettings = new Gio.Settings({
     schema_id: A11Y_APPLICATIONS_SCHEMA,
   });
+
+  if (settings.get_boolean("enable-audible-click")) {
+    gsoundCtx = new GSound.Context();
+    gsoundCtx.init(null);
+  }
 
   Main.layoutManager.removeChrome(Main.layoutManager.keyboardBox);
 
