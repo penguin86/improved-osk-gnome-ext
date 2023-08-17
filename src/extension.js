@@ -369,6 +369,7 @@ function enable() {
     schema_id: A11Y_APPLICATIONS_SCHEMA,
   });
 
+  // Set up audio feedback
   if (settings.get_boolean("enable-audible-click")) {
     gsoundCtx = new GSound.Context();
     gsoundCtx.init(null);
@@ -389,6 +390,16 @@ function enable() {
   let KeyboardIsSetup = tryDestroyKeyboard();
 
   enable_overrides();
+
+  settings.connect("changed::enable-audible-click", function () {
+    if (settings.get_boolean("enable-audible-click")) {
+      gsoundCtx = new GSound.Context();
+      gsoundCtx.init(null);
+    } else if (gsoundCtx !== null) {
+      gsoundCtx.destroy();
+      gsoundCtx = null;
+    }
+  });
 
   settings.connect("changed::show-statusbar-icon", function () {
     if (settings.get_boolean("show-statusbar-icon")) {
