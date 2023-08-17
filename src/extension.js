@@ -165,9 +165,7 @@ function override_addRowKeys(keys, layout) {
 }
 
 async function override_commitAction(keyval, str) {
-  if (settings.get_boolean("enable-audible-click")) {
-    gsoundCtx.play_simple({ "event.id" : "dialog-information" }, null);
-  }
+  playAudibleClick();
 
   if (this._modifiers.size === 0 && str !== '' &&
       keyval && this._oskCompletionEnabled) {
@@ -207,6 +205,7 @@ function override_toggleDelete(enabled) {
 
   if (enabled) {
     this._keyboardController.keyvalPress(Clutter.KEY_BackSpace);
+    playAudibleClick();
   } else {
     this._keyboardController.keyvalRelease(Clutter.KEY_BackSpace);
   }
@@ -456,3 +455,10 @@ function disable() {
   }
   Main.layoutManager.addTopChrome(Main.layoutManager.keyboardBox);
 }
+
+function playAudibleClick() {
+  if (settings.get_boolean("enable-audible-click")) {
+    gsoundCtx.play_simple({ "event.id" : "dialog-information" }, null);
+  }
+}
+        
