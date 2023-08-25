@@ -96,6 +96,14 @@ function override_relayout() {
 }
 
 function override_addRowKeys(keys, layout) {
+  const split = true; // TODO: in Config
+  let hasSpacebar = false;
+  for (let key in keys) {
+    log(`[${key.strings?.get(0)}] ${key.label}`);
+    if (key.strings?.get(0) == " ")
+      hasSpacebar = true;
+  }
+
   for (let i = 0; i < keys.length; ++i) {
     const key = keys[i];
     const {strings} = key;
@@ -108,8 +116,14 @@ function override_addRowKeys(keys, layout) {
       keyval: key.keyval,
     }, strings);
 
-    if (key.width !== null)
-      button.setWidth(key.width);
+    if (key.width !== null) {
+      let width = key.width;
+      if (split && commitString == " ") {
+        // Split keyboard has two spacebars with half the width
+        width = width / 2;
+      }
+      button.setWidth(width);
+    }
 
     if (key.action !== 'modifier') {
       button.connect('commit', (_actor, keyval, str) => {
@@ -161,6 +175,19 @@ function override_addRowKeys(keys, layout) {
       button.keyButton.add_style_class_name('default-key');
 
     layout.appendKey(button, button.keyButton.keyWidth);
+
+    // Split keyboard central space
+    if (split && !hasSpacebar && i == (Math.round(keys.length / 2) - 1))
+      addSplitKeyboardGap(layout, commitString);
+
+    //log(`hasSpacebar: ${hasSpacebar} commitString: [${commitString}]`);
+
+    // Split spacebar in two parts
+    if (split && commitString == " ") {
+      addSplitKeyboardGap(layout, commitString);
+      // Add a second spacebar for better thumb reachability
+      //layout.appendKey(button, button.keyButton.keyWidth);
+    }
   }
 }
 
@@ -461,4 +488,12 @@ function playAudibleClick() {
     gsoundCtx.play_simple({ "event.id" : "dialog-information" }, null);
   }
 }
-        
+
+function addSplitKeyboardGap(layout, removeMe) {
+  const splitWidth = 10; // TODO: in Config
+
+  let splitSpacer = new Clutter.Actor();
+
+  layout.appendKey(splitSpacer, splitWidth);
+}
+
