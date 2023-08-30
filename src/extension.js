@@ -96,13 +96,14 @@ function override_relayout() {
 }
 
 function override_addRowKeys(keys, layout) {
-  const split = true; // TODO: in Config
-  let hasSpacebar = false;
-  for (let key in keys) {
-    log(`[${key.strings?.get(0)}] ${key.label}`);
-    if (key.strings?.get(0) == " ")
-      hasSpacebar = true;
-  }
+  const split = settings.get_boolean("enable-audible-click")
+  const splitWidthLandscape = settings.get_int("landscape-split");
+  const splitWidthPortrait = settings.get_int("portrait-split");
+
+  log(`Split keyb settings: enabled: ${split}, landscape: ${splitWidthLandscape}, portrait: ${splitWidthPortrait}`);
+
+  const splitWidth = isPortrait() ? splitWidthPortrait : splitWidthLandscape;
+  let hasSpacebar = spacebarInKeys(keys);
 
   for (let i = 0; i < keys.length; ++i) {
     const key = keys[i];
@@ -178,15 +179,83 @@ function override_addRowKeys(keys, layout) {
 
     // Split keyboard central space
     if (split && !hasSpacebar && i == (Math.round(keys.length / 2) - 1))
-      addSplitKeyboardGap(layout, commitString);
-
-    //log(`hasSpacebar: ${hasSpacebar} commitString: [${commitString}]`);
+      addSplitKeyboardGap(layout, splitWidth);
 
     // Split spacebar in two parts
     if (split && commitString == " ") {
-      addSplitKeyboardGap(layout, commitString);
+      addSplitKeyboardGap(layout, splitWidth - key.width / 2);
       // Add a second spacebar for better thumb reachability
-      //layout.appendKey(button, button.keyButton.keyWidth);
+
+      // DEBUG
+      let button = new Key({
+        commitString,
+        label: key.label,
+        iconName: key.iconName,
+        keyval: key.keyval,
+      }, strings);
+
+      if (key.width !== null) {
+        let width = key.width;
+        if (split && commitString == " ") {
+          // Split keyboard has two spacebars with half the width
+          width = width / 2;
+        }
+        button.setWidth(width);
+      }
+
+      if (key.action !== 'modifier') {
+        button.connect('commit', (_actor, keyval, str) => {
+          this._commitAction(keyval, str);
+        });
+      }
+
+      if (key.action !== null) {
+        button.connect('released', () => {
+          if (key.action === 'hide') {
+            this.close();
+          } else if (key.action === 'languageMenu') {
+            this._popupLanguageMenu(button);
+          } else if (key.action === 'emoji') {
+            this._toggleEmoji();
+          } else if (key.action === 'modifier') {
+            // Pass the whole key object to allow switching layers on "Shift" press
+            this._toggleModifier(key);
+
+          } else if (key.action === 'delete') {
+            this._toggleDelete(true);
+            this._toggleDelete(false);
+          } else if (!this._longPressed && key.action === 'levelSwitch') {
+            this._setActiveLayer(key.level);
+
+            // Ensure numbers layer latches
+            const isNumbersLayer = key.level === 2;
+            this._setLatched(isNumbersLayer);
+          }
+
+          this._longPressed = false;
+        });
+      }
+
+      if (key.iconName === 'keyboard-shift-symbolic') layout.shiftKeys.push(button);
+
+      if (key.action === 'delete') {
+        button.connect('long-press',
+            () => this._toggleDelete(true));
+      }
+
+      if (key.action === 'modifier') {
+        let modifierKeys = this._modifierKeys[key.keyval] || [];
+        modifierKeys.push(button);
+        this._modifierKeys[key.keyval] = modifierKeys;
+      }
+
+      if (key.action || key.keyval)
+        button.keyButton.add_style_class_name('default-key');
+
+      layout.appendKey(button, button.keyButton.keyWidth);
+      // DEBUG
+
+      layout.appendKey(button, button.keyButton.keyWidth);
     }
   }
 }
@@ -489,11 +558,26 @@ function playAudibleClick() {
   }
 }
 
-function addSplitKeyboardGap(layout, removeMe) {
-  const splitWidth = 10; // TODO: in Config
-
+function addSplitKeyboardGap(layout, splitWidth) {
   let splitSpacer = new Clutter.Actor();
-
   layout.appendKey(splitSpacer, splitWidth);
+}
+
+function spacebarInKeys(keys) {
+  for (let i = 0; i < keys.length; i++) {
+    const key = keys[i];
+    if (!key.strings || key.strings.length == 0)
+      continue;
+    if (key.strings[0] == " ")
+      return true;
+  }
+
+  return false;
+}
+
+function isPortrait() {
+  let monitor = Main.layoutManager.keyboardMonitor;
+  if (!monitor) return false;
+  return monitor.width > monitor.height;
 }
 

@@ -24,5 +24,14 @@
     <key name="portrait-height" type="i">
       <default>16</default>
     </key>
+    <key name="enable-split" type="b">
+      <default>false</default>
+    </key>
+    <key name="landscape-split" type="i">
+      <default>5</default>
+    </key>
+    <key name="portrait-split" type="i">
+      <default>0</default>
+    </key>
   </schema>
 </schemalist>

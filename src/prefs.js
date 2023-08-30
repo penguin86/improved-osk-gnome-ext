@@ -178,5 +178,60 @@ function buildPrefsWidget() {
   );
   prefsWidget.attach(inputAudibleClick, 1, 6, 1, 1);
 
+  const labelEnableSplit = new Gtk.Label({
+    label: "Enable split keyboard",
+    halign: Gtk.Align.START,
+    visible: true,
+  });
+  prefsWidget.attach(labelEnableSplit, 0, 7, 1, 1);
+
+  let inputEnableSplit = new Gtk.Switch({
+    halign: Gtk.Align.START,
+    visible: true,
+  });
+  this.settings.bind(
+    "enable-split",
+    inputEnableSplit,
+    "active",
+    Gio.SettingsBindFlags.DEFAULT
+  );
+  prefsWidget.attach(inputEnableSplit, 1, 7, 1, 1);
+
+  const labelPortraitSplit = new Gtk.Label({
+    label: "Keyboard split space in portrait (number of empty key slots)",
+    halign: Gtk.Align.START,
+    visible: true,
+  });
+  prefsWidget.attach(labelPortraitSplit, 0, 8, 1, 1);
+
+  let inputPortraitSplit = new Gtk.SpinButton();
+  inputPortraitSplit.set_range(0, 50);
+  inputPortraitHeight.set_increments(1, 5);
+  this.settings.bind(
+    "portrait-split",
+    inputPortraitSplit,
+    "value",
+    Gio.SettingsBindFlags.DEFAULT
+  );
+  prefsWidget.attach(inputPortraitSplit, 1, 8, 1, 1);
+
+  const labelLandscapeSplit = new Gtk.Label({
+    label: "Keyboard split space in landscape (number of empty key slots)",
+    halign: Gtk.Align.START,
+    visible: true,
+  });
+  prefsWidget.attach(labelLandscapeSplit, 0, 9, 1, 1);
+
+  let inputLandscapeSplit = new Gtk.SpinButton();
+  inputLandscapeSplit.set_range(0, 30);
+  inputPortraitHeight.set_increments(1, 5);
+  this.settings.bind(
+    "landscape-split",
+    inputLandscapeSplit,
+    "value",
+    Gio.SettingsBindFlags.DEFAULT
+  );
+  prefsWidget.attach(inputLandscapeSplit, 1, 9, 1, 1);
+
   return prefsWidget;
 }
